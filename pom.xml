@@ -1,114 +1,116 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-
-	<groupId>io.spot-next</groupId>
-	<artifactId>jde</artifactId>
-	<name>jde</name>
-
-	<packaging>jar</packaging>
+	<groupId>io.spot-next.jade</groupId>
+	<artifactId>infrastructure</artifactId>
 	<version>1.0-SNAPSHOT</version>
 
-	<organization>
-		<!-- Used as the 'Vendor' for JNLP generation -->
-		<name>spot-next</name>
-	</organization>
-
-	<properties>
-		<slf4j.version>1.7.12</slf4j.version>
-		<log4j.version>1.2.17</log4j.version>
-		<java.version>11</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
 	<build>
-		<finalName>jde</finalName>
 
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>com.zenjava</groupId>
-				<artifactId>javafx-maven-plugin</artifactId>
-				<version>8.1.5</version>
-				<configuration>
-
-					<mainClass>io.spotnext.jde.MainApp</mainClass>
-
-					<!-- only required if signing the jar file -->
-					<keyStoreAlias>example-user</keyStoreAlias>
-					<keyStorePassword>example-password</keyStorePassword>
-					<allPermissions>true</allPermissions>
-
-				</configuration>
-			</plugin>
-
-		</plugins>
 	</build>
 
+	<properties>
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+	</properties>
 
 	<dependencies>
-
-		<!-- MigLayout -->
-
 		<dependency>
-			<groupId>com.miglayout</groupId>
-			<artifactId>miglayout-javafx</artifactId>
-			<version>5.0</version>
+			<groupId>org.eclipse.jdt</groupId>
+			<artifactId>ecj</artifactId>
+			<version>3.17.0</version>
 		</dependency>
 
-		<!-- Apache Commons -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>27.1-jre</version>
+		</dependency>
 
 		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.1.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
 		</dependency>
 
-		<!-- Logging -->
-
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.3</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.aquafx-project</groupId>
-			<artifactId>aquafx</artifactId>
-			<version>0.2</version>
+			<groupId>at.spot.sweaty</groupId>
+			<artifactId>sweaty</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
+
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.eclipse.platform</groupId> -->
+		<!-- <artifactId>org.eclipse.ui.ide</artifactId> -->
+		<!-- <version>3.15.0</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.eclipse.platform</groupId> -->
+		<!-- <artifactId>org.eclipse.jface</artifactId> -->
+		<!-- <version>3.15.100</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.eclipse.platform</groupId> -->
+		<!-- <artifactId>org.eclipse.ui.editors</artifactId> -->
+		<!-- <version>3.11.400</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.eclipse.platform</groupId> -->
+		<!-- <artifactId>org.eclipse.text</artifactId> -->
+		<!-- <version>3.8.100</version> -->
+		<!-- </dependency> -->
 		<dependency>
-			<groupId>org.openjfx</groupId>
-			<artifactId>javafx-controls</artifactId>
-			<version>11.0.2</version>
+			<groupId>org.eclipse.platform</groupId>
+			<artifactId>org.eclipse.ui.genericeditor</artifactId>
+			<version>1.1.300</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.platform</groupId>
+					<artifactId>org.eclipse.swt</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+
+
+
+		<!-- <dependency> -->
+		<!-- <groupId>ca.weblite.objc</groupId> -->
+		<!-- <artifactId>java-objc-bridge</artifactId> -->
+		<!-- <version>1.0</version> -->
+		<!-- <scope>system</scope> -->
+		<!-- <systemPath>${basedir}/lib/ObjCBridge.jar</systemPath> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>net.java.dev.jna</groupId> -->
+		<!-- <artifactId>jna</artifactId> -->
+		<!-- <version>5.3.1</version> -->
+		<!-- </dependency> -->
+
+
 
 	</dependencies>
-
 </project>
