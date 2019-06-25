@@ -53,35 +53,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>at.spot.sweaty</groupId>
-			<artifactId>sweaty</artifactId>
+			<groupId>io.spot-next</groupId>
+			<artifactId>kakao</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.eclipse.platform</groupId> -->
-		<!-- <artifactId>org.eclipse.ui.ide</artifactId> -->
-		<!-- <version>3.15.0</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.eclipse.platform</groupId> -->
-		<!-- <artifactId>org.eclipse.jface</artifactId> -->
-		<!-- <version>3.15.100</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.eclipse.platform</groupId> -->
-		<!-- <artifactId>org.eclipse.ui.editors</artifactId> -->
-		<!-- <version>3.11.400</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.eclipse.platform</groupId> -->
-		<!-- <artifactId>org.eclipse.text</artifactId> -->
-		<!-- <version>3.8.100</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.eclipse.platform</groupId>
 			<artifactId>org.eclipse.ui.genericeditor</artifactId>
@@ -93,24 +69,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
-
-
-		<!-- <dependency> -->
-		<!-- <groupId>ca.weblite.objc</groupId> -->
-		<!-- <artifactId>java-objc-bridge</artifactId> -->
-		<!-- <version>1.0</version> -->
-		<!-- <scope>system</scope> -->
-		<!-- <systemPath>${basedir}/lib/ObjCBridge.jar</systemPath> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>net.java.dev.jna</groupId> -->
-		<!-- <artifactId>jna</artifactId> -->
-		<!-- <version>5.3.1</version> -->
-		<!-- </dependency> -->
-
-
 
 	</dependencies>
 </project>
