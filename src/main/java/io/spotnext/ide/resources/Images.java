@@ -1,14 +1,12 @@
 package io.spotnext.ide.resources;
 
-import org.eclipse.swt.graphics.Image;
-
-import at.int32.sweaty.ui.utils.ImageUtils;
+import io.spotnext.kakao.structs.NSImage;
 
 public class Images {
 
 	public static final String imgPath = "/images/";
-	public static final Image TOOLBAR_SAVE = ImageUtils.getImageFromResources(imgPath + "save.png");
-	public static final Image TOOLBAR_EDIT = ImageUtils.getImageFromResources(imgPath + "edit.png");
-	public static final Image TOOLBAR_DELETE = ImageUtils.getImageFromResources(imgPath + "delete.png");
-	public static final Image trayIcon = ImageUtils.getImageFromResources(imgPath + "tray.png");
+	public static final NSImage TOOLBAR_SAVE = new NSImage(imgPath + "save.png");
+	public static final NSImage TOOLBAR_EDIT = new NSImage(imgPath + "edit.png");
+	public static final NSImage TOOLBAR_DELETE = new NSImage(imgPath + "delete.png");
+	public static final NSImage trayIcon = new NSImage(imgPath + "tray.png");
 }
