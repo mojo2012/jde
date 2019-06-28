@@ -3,6 +3,7 @@ package io.spotnext.ide.project.impl;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
@@ -35,7 +36,7 @@ public class JavaProject implements Project {
 //			ClassUtil.setField(projectBuilder, "modelBuilder", factory.newInstance());
 
 //			var result = projectBuilder.build(pomFile, projectBuildingRequest);
-			this.model = factory.newInstance().build(request).getRawModel();
+			this.model = factory.newInstance().build(request).getEffectiveModel();
 
 //			var artifact = new DefaultArtifact(model.getGroupId(), model.getArtifactId(), model.getVersion(), "compile", "jar", "", new DefaultArtifactHandler());
 //			var result = projectBuilder.build(artifact, projectBuildingRequest);
@@ -90,7 +91,6 @@ public class JavaProject implements Project {
 			return model.getName();
 		}
 
-		
 		@Override
 		public String getGroupId() {
 			return model.getGroupId();
@@ -100,10 +100,25 @@ public class JavaProject implements Project {
 		public String getArtifactId() {
 			return model.getArtifactId();
 		}
-		
+
 		@Override
 		public String getVersion() {
 			return model.getVersion();
 		}
+	}
+
+	@Override
+	public List<String> getTestSourceRoots() {
+		return Arrays.asList(model.getBuild().getTestSourceDirectory());
+	}
+
+	@Override
+	public List<String> getResourceRoots() {
+		return model.getBuild().getResources().stream().map(r -> r.getDirectory()).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<String> getTestResourceRoots() {
+		return model.getBuild().getTestResources().stream().map(r -> r.getDirectory()).collect(Collectors.toList());
 	}
 }

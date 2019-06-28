@@ -1,10 +1,13 @@
 package io.spotnext.ide.ui;
 
+import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
+import io.spotnext.kakao.foundation.NSPoint;
 import io.spotnext.kakao.foundation.NSRect;
 import io.spotnext.kakao.foundation.NSSize;
 import io.spotnext.kakao.structs.DataGroupNode;
 import io.spotnext.kakao.structs.DataLeafNode;
+import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSFocusRingType;
 import io.spotnext.kakao.structs.NSImageName;
@@ -32,10 +35,13 @@ public class MainWindow {
 	private NSOutlineView sidebar;
 
 	public MainWindow() {
-		window = new NSWindow();
+		var windowSize = new NSSize(1200, 800);
+
+		window = new NSWindow(new NSRect(new NSPoint(-1, -1), windowSize));
 		window.setTitle("JDE");
 		window.setTitleVisibility(NSWindowTitleVisibility.Hidden);
 		window.setToolbar(createToolbar());
+		window.setMinSize(windowSize);
 
 		createSplitPane(window);
 
@@ -76,7 +82,7 @@ public class MainWindow {
 
 		var sidebarScrollView = new NSScrollView(sidebarRect);
 		sidebarScrollView.setContentView(clipView);
-		sidebarScrollView.setAutoresizingMask(NSAutoresizingMaskOptions.MaxXMargin);
+//		sidebarScrollView.setAutoresizingMask(NSAutoresizingMaskOptions.MaxXMargin);
 
 		var textFieldX = sidebarX + sidebarWidth;
 		var textFieldY = sidebarY;
@@ -161,15 +167,31 @@ public class MainWindow {
 
 	public void setupExplorer(ProjectExplorerData projectExplorerData) {
 		var root = new DataGroupNode("root");
-		var sourceFolders = new DataGroupNode("Sources");
-		var resourceFolders = new DataGroupNode("Resources");
-		var dependenciesFolders = new DataGroupNode("Dependencies");
-		var testSourcesFolders = new DataGroupNode("Test Sources");
-		
-		root.addNodes(sourceFolders, resourceFolders, dependenciesFolders, testSourcesFolders);
-		
+
+		for (var node : projectExplorerData.getNodes()) {
+			var n = createNode(node);
+			root.addNodes(n);
+		}
+
 		sidebar.setDataSource(new NSOutlineViewDataSource(root) {
 		});
-		
+
+	}
+
+	private DataNode createNode(ExplorerNode node) {
+		final DataNode dataNode;
+
+		if (node.getNodes().size() > 0) {
+			var dataGroupNode = new DataGroupNode(node.getName());
+			dataNode = dataGroupNode;
+
+			for (var subNode : node.getNodes()) {
+				dataGroupNode.addNodes(createNode(subNode));
+			}
+		} else {
+			dataNode = new DataLeafNode(node.getName());
+		}
+
+		return dataNode;
 	}
 }

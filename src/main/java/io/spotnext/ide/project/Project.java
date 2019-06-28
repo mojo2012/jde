@@ -13,4 +13,10 @@ public interface Project {
 	void setVersion(String version);
 
 	List<String> getSourceRoots();
+	
+	List<String> getTestSourceRoots();
+	
+	List<String> getResourceRoots();
+	
+	List<String> getTestResourceRoots();
 }

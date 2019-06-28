@@ -1,8 +1,12 @@
 package io.spotnext.ide;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,19 +54,46 @@ public class Application {
 		private final List<ExplorerNode> nodes = new ArrayList<>();
 
 		public ProjectExplorerData(Project project) {
-			var sourceRoot = new ExplorerNode("Sources");
-			nodes.add(sourceRoot);
+			nodes.add(createFileRootNodes("Sources", project.getSourceRoots()));
+			nodes.add(createFileRootNodes("Resources", project.getResourceRoots()));
+			nodes.add(createFileRootNodes("TestSources", project.getTestSourceRoots()));
+			nodes.add(createFileRootNodes("TestResources", project.getTestResourceRoots()));
 
-			for (var s : project.getSourceRoots()) {
-				sourceRoot.addNode(readDirectory(s));
+			var dependenciesRoot = new ExplorerNode("Dependencies");
+			nodes.add(dependenciesRoot);
+
+//			for (var s : project.getSourceRoots()) {
+//				dependenciesRoot.addNode(readDirectory(s));
+//			}
+		}
+
+		private ExplorerNode createFileRootNodes(String name, List<String> baseDirectories) {
+			var node = new ExplorerNode(name);
+
+			for (var s : baseDirectories) {
+				node.addNode(createFileNode(s));
 			}
+
+			return node;
 		}
 
-		private ExplorerNode readDirectory(String filePath) {
-			var sourceDir = new ExplorerNode(filePath);
-			
-			return sourceDir;
+		private ExplorerNode createFileNode(String filePath) {
+			final var file = new File(filePath);
+			final var node = new ExplorerFileNode(file.getName(), filePath, FilenameUtils.getExtension(file.getName()));
+
+			if (file.isDirectory()) {
+				for (var l : file.list()) {
+					node.addNode(createFileNode(Paths.get(filePath, l).toAbsolutePath().toString()));
+				}
+			}
+
+			return node;
 		}
+
+		public List<ExplorerNode> getNodes() {
+			return nodes;
+		}
+
 	}
 
 	public static class ExplorerNode {
@@ -83,6 +114,33 @@ public class Application {
 
 		public String getName() {
 			return name;
+		}
+	}
+
+	public static class ExplorerFileNode extends ExplorerNode {
+		private String filePath;
+		private String fileExtension;
+
+		public ExplorerFileNode(String name, String filePath, String extension) {
+			super(name);
+			this.filePath = filePath;
+			this.fileExtension = extension;
+		}
+
+		public String getFilePath() {
+			return filePath;
+		}
+
+		public void setFilePath(String filePath) {
+			this.filePath = filePath;
+		}
+
+		public String getFileExtension() {
+			return fileExtension;
+		}
+
+		public void setFileExtension(String fileExtension) {
+			this.fileExtension = fileExtension;
 		}
 
 	}
