@@ -1,5 +1,7 @@
 package io.spotnext.ide.ui;
 
+import ca.weblite.objc.Proxy;
+import ca.weblite.objc.annotations.Msg;
 import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
 import io.spotnext.kakao.foundation.NSPoint;
@@ -10,19 +12,23 @@ import io.spotnext.kakao.structs.DataLeafNode;
 import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSFocusRingType;
+import io.spotnext.kakao.structs.NSImage;
 import io.spotnext.kakao.structs.NSImageName;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
+import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
 import io.spotnext.kakao.structs.Orientation;
 import io.spotnext.kakao.structs.SelectionHighlightStyle;
 import io.spotnext.kakao.support.NSOutlineViewDataSource;
 import io.spotnext.kakao.support.NSOutlineViewDelegate;
+import io.spotnext.kakao.support.NSWorkspace;
 import io.spotnext.kakao.ui.NSButton;
 import io.spotnext.kakao.ui.NSClipView;
 import io.spotnext.kakao.ui.NSOutlineView;
 import io.spotnext.kakao.ui.NSScrollView;
 import io.spotnext.kakao.ui.NSSearchField;
 import io.spotnext.kakao.ui.NSSplitView;
+import io.spotnext.kakao.ui.NSTableCellView;
 import io.spotnext.kakao.ui.NSTableColumn;
 import io.spotnext.kakao.ui.NSTextField;
 import io.spotnext.kakao.ui.NSToolbar;
@@ -68,11 +74,26 @@ public class MainWindow {
 		var col1 = new NSTableColumn("Content");
 		col1.setEditable(false);
 		col1.getHeaderCell().setStringValue("Content");
+		sidebar.setRowSizeStyle(NSTableViewRowSizeStyle.Default);
 		sidebar.addTableColumn(col1);
 		sidebar.setOutlineTableColumn(col1);
 		sidebar.setTableHeaderView(null);
 
 		sidebar.setDelegate(new NSOutlineViewDelegate() {
+			@Override
+			@Msg(selector = "outlineView:viewForTableColumn:item:", signature = "@@:@@@")
+			public Proxy outlineViewViewForTableColumn(Proxy outlineView, Proxy tableColumn, Proxy item) {
+				var proxy = super.outlineViewViewForTableColumn(outlineView, tableColumn, item);
+
+				var iconProxy = item.sendProxy("icon");
+				if (iconProxy != null) {
+					var view = new NSTableCellView(proxy);
+					var imageViewProxy = iconProxy.sendProxy("handler");
+					view.getImageView().setImage(new NSImage(imageViewProxy));
+				}
+
+				return proxy;
+			}
 		});
 
 		var sidebarRect = new NSRect(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
@@ -188,8 +209,14 @@ public class MainWindow {
 			for (var subNode : node.getNodes()) {
 				dataGroupNode.addNodes(createNode(subNode));
 			}
+			
+			var icon = NSWorkspace.shared().getIconForFileType("fldr");
+			dataNode.setIcon(icon);
 		} else {
 			dataNode = new DataLeafNode(node.getName());
+
+			var icon = NSWorkspace.shared().getIconForFileType("java");
+			dataNode.setIcon(icon);
 		}
 
 		return dataNode;
