@@ -4,8 +4,8 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +19,11 @@ import io.spotnext.kakao.util.ThreadUtil;
 public class Application {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Application.class);
+	private static final List<Pattern> FILE_PATTERNS_TO_EXCLUDE = new ArrayList<>();
+	
+	static {
+		FILE_PATTERNS_TO_EXCLUDE.add(Pattern.compile("\\.DS_Store"));
+	}
 
 	private final Project project;
 
@@ -59,7 +64,7 @@ public class Application {
 			nodes.add(createFileRootNodes("TestSources", project.getTestSourceRoots()));
 			nodes.add(createFileRootNodes("TestResources", project.getTestResourceRoots()));
 
-			var dependenciesRoot = new ExplorerNode("Dependencies");
+			var dependenciesRoot = new ExplorerNode("Dependencies", true);
 			nodes.add(dependenciesRoot);
 
 //			for (var s : project.getSourceRoots()) {
@@ -68,7 +73,7 @@ public class Application {
 		}
 
 		private ExplorerNode createFileRootNodes(String name, List<String> baseDirectories) {
-			var node = new ExplorerNode(name);
+			var node = new ExplorerNode(name, true);
 
 			for (var s : baseDirectories) {
 				node.addNode(createFileNode(s));
@@ -83,7 +88,9 @@ public class Application {
 
 			if (file.isDirectory()) {
 				for (var l : file.list()) {
-					node.addNode(createFileNode(Paths.get(filePath, l).toAbsolutePath().toString()));
+					if (FILE_PATTERNS_TO_EXCLUDE.stream().noneMatch(p -> p.matcher(l).matches())) {
+						node.addNode(createFileNode(Paths.get(filePath, l).toAbsolutePath().toString()));
+					}
 				}
 			}
 
@@ -99,16 +106,19 @@ public class Application {
 	public static class ExplorerNode {
 		private final String name;
 		private final String filePath;
+		private final boolean isGroupHeader;
 		private final List<ExplorerNode> nodes = new ArrayList<>();
 
 		public ExplorerNode(String name, String filePath) {
 			this.name = name;
 			this.filePath = filePath;
+			this.isGroupHeader = false;
 		}
 
-		public ExplorerNode(String name) {
+		public ExplorerNode(String name, boolean isGroupHeader) {
 			this.name = name;
 			this.filePath = null;
+			this.isGroupHeader = isGroupHeader;
 		}
 
 		public void addNode(ExplorerNode node) {
@@ -129,6 +139,10 @@ public class Application {
 
 		public String getFilePath() {
 			return filePath;
+		}
+
+		public boolean isGroupHeader() {
+			return isGroupHeader;
 		}
 
 	}

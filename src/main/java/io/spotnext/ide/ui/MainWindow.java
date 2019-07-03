@@ -78,7 +78,7 @@ public class MainWindow {
 		var explorerSidebarScrollView = createExplorerSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 		var detailsSidebarScrollView = createDetailsSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 
-		editorView = createCodeEditor(bounds, sidebarX,sidebarY, sidebarWidth, sidebarHeight);
+		editorView = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 
 		splitView.addSubview(explorerSidebarScrollView);
 		splitView.addSubview(editorView);
@@ -103,10 +103,10 @@ public class MainWindow {
 		textField.setFocusRingType(NSFocusRingType.None);
 		textField.setBordered(false);
 		textField.setFont(new NSFont("Monaco", 12.));
-		
+
 		return textField;
 	}
-	
+
 	private NSScrollView createExplorerSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
 		explorerSidebar = new NSOutlineView();
 		explorerSidebar.setSelectionHighlightStyle(SelectionHighlightStyle.SourceList);
@@ -118,6 +118,7 @@ public class MainWindow {
 		explorerSidebar.addTableColumn(col1);
 		explorerSidebar.setOutlineTableColumn(col1);
 		explorerSidebar.setTableHeaderView(null);
+		explorerSidebar.setFloatsGroupRows(false);
 
 		var delegate = new NSOutlineViewDelegate(explorerSidebar) {
 			@Override
@@ -135,7 +136,7 @@ public class MainWindow {
 				return proxy;
 			}
 		};
-		
+
 		delegate.onSelectionChanged(item -> {
 			if (item instanceof DataLeafNode) {
 				var object = (ExplorerNode) item.getObject();
@@ -144,7 +145,7 @@ public class MainWindow {
 				}
 			}
 		});
-		
+
 		explorerSidebar.setDelegate(delegate);
 
 		var sidebarRect = new NSRect(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
@@ -157,7 +158,7 @@ public class MainWindow {
 
 		return sidebarScrollView;
 	}
-	
+
 	private void showFileInEditor(String filePath) {
 		String fileValue;
 		try {
@@ -165,7 +166,7 @@ public class MainWindow {
 		} catch (IOException e) {
 			fileValue = "";
 		}
-		
+
 		editorView.setText(fileValue);
 	}
 
@@ -266,15 +267,25 @@ public class MainWindow {
 		final DataNode dataNode;
 
 		if (node.getNodes().size() > 0) {
-			var dataGroupNode = new DataGroupNode(node.getName());
+			var title = node.getName();
+			
+			if (node.isGroupHeader()) {
+				title = title.toUpperCase();
+			}
+			
+			var dataGroupNode = new DataGroupNode(title);
 			dataNode = dataGroupNode;
 
 			for (var subNode : node.getNodes()) {
 				dataGroupNode.addNodes(createNode(subNode));
 			}
 
-			var icon = createImageFromResource("/images/filetypes/folder_closed.png");
-			dataNode.setIcon(icon);
+			if (!node.isGroupHeader()) {
+				var icon = createImageFromResource("/images/filetypes/folder_closed.png");
+				dataNode.setIcon(icon);
+			} else {
+				dataGroupNode.setExpanded(true);
+			}
 		} else {
 			dataNode = new DataLeafNode(node.getName());
 			dataNode.setObject(node);
@@ -282,6 +293,8 @@ public class MainWindow {
 			var icon = createImageFromResource("/images/filetypes/code.png");
 			dataNode.setIcon(icon);
 		}
+
+		dataNode.setHeader(node.isGroupHeader());
 
 		return dataNode;
 	}
