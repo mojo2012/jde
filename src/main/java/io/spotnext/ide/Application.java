@@ -98,10 +98,17 @@ public class Application {
 
 	public static class ExplorerNode {
 		private final String name;
+		private final String filePath;
 		private final List<ExplorerNode> nodes = new ArrayList<>();
+
+		public ExplorerNode(String name, String filePath) {
+			this.name = name;
+			this.filePath = filePath;
+		}
 
 		public ExplorerNode(String name) {
 			this.name = name;
+			this.filePath = null;
 		}
 
 		public void addNode(ExplorerNode node) {
@@ -115,6 +122,15 @@ public class Application {
 		public String getName() {
 			return name;
 		}
+
+		public boolean isFile() {
+			return this.filePath != null;
+		}
+
+		public String getFilePath() {
+			return filePath;
+		}
+
 	}
 
 	public static class ExplorerFileNode extends ExplorerNode {
@@ -122,7 +138,7 @@ public class Application {
 		private String fileExtension;
 
 		public ExplorerFileNode(String name, String filePath, String extension) {
-			super(name);
+			super(name, filePath);
 			this.filePath = filePath;
 			this.fileExtension = extension;
 		}

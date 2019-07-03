@@ -1,5 +1,9 @@
 package io.spotnext.ide.ui;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import ca.weblite.objc.Proxy;
 import ca.weblite.objc.annotations.Msg;
 import io.spotnext.ide.Application.ExplorerNode;
@@ -11,17 +15,17 @@ import io.spotnext.kakao.structs.DataGroupNode;
 import io.spotnext.kakao.structs.DataLeafNode;
 import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
+import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSFocusRingType;
 import io.spotnext.kakao.structs.NSImage;
-import io.spotnext.kakao.structs.NSImageName;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
 import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
 import io.spotnext.kakao.structs.Orientation;
 import io.spotnext.kakao.structs.SelectionHighlightStyle;
+import io.spotnext.kakao.support.NSFont;
 import io.spotnext.kakao.support.NSOutlineViewDataSource;
 import io.spotnext.kakao.support.NSOutlineViewDelegate;
-import io.spotnext.kakao.support.NSWorkspace;
 import io.spotnext.kakao.ui.NSButton;
 import io.spotnext.kakao.ui.NSClipView;
 import io.spotnext.kakao.ui.NSOutlineView;
@@ -33,12 +37,15 @@ import io.spotnext.kakao.ui.NSTableColumn;
 import io.spotnext.kakao.ui.NSTextField;
 import io.spotnext.kakao.ui.NSToolbar;
 import io.spotnext.kakao.ui.NSToolbarItem;
+import io.spotnext.kakao.ui.NSView;
 import io.spotnext.kakao.ui.NSWindow;
 
 public class MainWindow {
 
 	private final NSWindow window;
-	private NSOutlineView sidebar;
+	private NSOutlineView explorerSidebar;
+	private NSView detailsSidebar;
+	private NSTextField editorView;
 
 	public MainWindow() {
 		var windowSize = new NSSize(1200, 800);
@@ -68,18 +75,51 @@ public class MainWindow {
 		var sidebarWidth = 250d;
 		var sidebarHeight = bounds.size.height.doubleValue();
 
-		sidebar = new NSOutlineView();
-		sidebar.setSelectionHighlightStyle(SelectionHighlightStyle.SourceList);
+		var explorerSidebarScrollView = createExplorerSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
+		var detailsSidebarScrollView = createDetailsSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
+
+		editorView = createCodeEditor(bounds, sidebarX,sidebarY, sidebarWidth, sidebarHeight);
+
+		splitView.addSubview(explorerSidebarScrollView);
+		splitView.addSubview(editorView);
+		splitView.addSubview(detailsSidebarScrollView);
+
+		// why can't I pass 200?
+//		splitView.setPosition(20d, 0);
+		splitView.adjustSubviews();
+		splitView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
+//		splitView.setHoldingPriorityForSubview(490, 0);
+
+		window.addSubview(splitView);
+	}
+
+	private NSTextField createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
+		var textFieldX = sidebarX + sidebarWidth * 2;
+		var textFieldY = sidebarY;
+		var textFieldWidth = bounds.size.width.doubleValue() - sidebarWidth * 2;
+		var textFieldHeight = sidebarHeight;
+
+		var textField = new NSTextField(new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight));
+		textField.setFocusRingType(NSFocusRingType.None);
+		textField.setBordered(false);
+		textField.setFont(new NSFont("Monaco", 12.));
+		
+		return textField;
+	}
+	
+	private NSScrollView createExplorerSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
+		explorerSidebar = new NSOutlineView();
+		explorerSidebar.setSelectionHighlightStyle(SelectionHighlightStyle.SourceList);
 
 		var col1 = new NSTableColumn("Content");
 		col1.setEditable(false);
 		col1.getHeaderCell().setStringValue("Content");
-		sidebar.setRowSizeStyle(NSTableViewRowSizeStyle.Default);
-		sidebar.addTableColumn(col1);
-		sidebar.setOutlineTableColumn(col1);
-		sidebar.setTableHeaderView(null);
+		explorerSidebar.setRowSizeStyle(NSTableViewRowSizeStyle.Default);
+		explorerSidebar.addTableColumn(col1);
+		explorerSidebar.setOutlineTableColumn(col1);
+		explorerSidebar.setTableHeaderView(null);
 
-		sidebar.setDelegate(new NSOutlineViewDelegate() {
+		var delegate = new NSOutlineViewDelegate(explorerSidebar) {
 			@Override
 			@Msg(selector = "outlineView:viewForTableColumn:item:", signature = "@@:@@@")
 			public Proxy outlineViewViewForTableColumn(Proxy outlineView, Proxy tableColumn, Proxy item) {
@@ -94,36 +134,52 @@ public class MainWindow {
 
 				return proxy;
 			}
+		};
+		
+		delegate.onSelectionChanged(item -> {
+			if (item instanceof DataLeafNode) {
+				var object = (ExplorerNode) item.getObject();
+				if (object.isFile()) {
+					showFileInEditor(object.getFilePath());
+				}
+			}
 		});
+		
+		explorerSidebar.setDelegate(delegate);
 
 		var sidebarRect = new NSRect(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 		var clipView = new NSClipView();
 		clipView.setAutoresizesSubviews(true);
-		clipView.setDocumentView(sidebar);
+		clipView.setDocumentView(explorerSidebar);
 
 		var sidebarScrollView = new NSScrollView(sidebarRect);
 		sidebarScrollView.setContentView(clipView);
-//		sidebarScrollView.setAutoresizingMask(NSAutoresizingMaskOptions.MaxXMargin);
 
-		var textFieldX = sidebarX + sidebarWidth;
-		var textFieldY = sidebarY;
-		var textFieldWidth = bounds.size.width.doubleValue() - sidebarWidth;
-		var textFieldHeight = sidebarHeight;
+		return sidebarScrollView;
+	}
+	
+	private void showFileInEditor(String filePath) {
+		String fileValue;
+		try {
+			fileValue = Files.readString(Paths.get(filePath));
+		} catch (IOException e) {
+			fileValue = "";
+		}
+		
+		editorView.setText(fileValue);
+	}
 
-		var textField = new NSTextField(new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight));
-		textField.setFocusRingType(NSFocusRingType.None);
-		textField.setBordered(false);
+	private NSScrollView createDetailsSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
+		detailsSidebar = new NSView("NSView", NSRect.DEFAULT);
+		var sidebarRect = new NSRect(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
+		var clipView = new NSClipView();
+		clipView.setAutoresizesSubviews(true);
+		clipView.setDocumentView(detailsSidebar);
 
-		splitView.addSubview(sidebarScrollView);
-		splitView.addSubview(textField);
+		var sidebarScrollView = new NSScrollView(sidebarRect);
+		sidebarScrollView.setContentView(clipView);
 
-		// why can't I pass 200?
-//		splitView.setPosition(20d, 0);
-		splitView.adjustSubviews();
-		splitView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
-//		splitView.setHoldingPriorityForSubview(490, 0);
-
-		window.addSubview(splitView);
+		return sidebarScrollView;
 	}
 
 	public NSToolbar createToolbar() {
@@ -134,8 +190,7 @@ public class MainWindow {
 		var runButtonItem = new NSToolbarItem("runButtonItem");
 		runButtonItem.setLabel("Run");
 		runButtonItem.setToolTip("Build and then run the current application");
-
-		var runButton = new NSButton(NSImageName.GoRight);
+		var runButton = new NSButton(createImageFromResource("/images/toolbar/run.png"));
 		runButton.setFrameSize(NSSize.of(50, 0));
 		runButtonItem.setView(runButton);
 		toolbar.insertItem(runButtonItem, itemIndex++);
@@ -144,11 +199,19 @@ public class MainWindow {
 		stopButtonItem.setLabel("Stop");
 		stopButtonItem.setToolTip("Stop the current application");
 		stopButtonItem.setEnabled(false);
-		var stopButton = new NSButton(NSImageName.GoLeft);
+		var stopButton = new NSButton(createImageFromResource("/images/toolbar/stop.png"));
 		stopButton.setFrameSize(NSSize.of(50, 0));
 		stopButtonItem.setView(stopButton);
 		stopButton.setEnabled(false);
 		toolbar.insertItem(stopButtonItem, itemIndex++);
+
+		var buildButtonItem = new NSToolbarItem("buildButtonItem");
+		buildButtonItem.setLabel("Build");
+		buildButtonItem.setToolTip("Build the current application");
+		var buildButton = new NSButton(createImageFromResource("/images/toolbar/compile.png"));
+		buildButton.setFrameSize(NSSize.of(50, 0));
+		buildButtonItem.setView(buildButton);
+		toolbar.insertItem(buildButtonItem, itemIndex++);
 
 //		var segControl = new NSSegmentedControl(new NSRect(0, 0, 200, 40));
 //		segControl.setSegmentCount(2);
@@ -194,7 +257,7 @@ public class MainWindow {
 			root.addNodes(n);
 		}
 
-		sidebar.setDataSource(new NSOutlineViewDataSource(root) {
+		explorerSidebar.setDataSource(new NSOutlineViewDataSource(root) {
 		});
 
 	}
@@ -209,16 +272,23 @@ public class MainWindow {
 			for (var subNode : node.getNodes()) {
 				dataGroupNode.addNodes(createNode(subNode));
 			}
-			
-			var icon = NSWorkspace.shared().getIconForFileType("fldr");
+
+			var icon = createImageFromResource("/images/filetypes/folder_closed.png");
 			dataNode.setIcon(icon);
 		} else {
 			dataNode = new DataLeafNode(node.getName());
+			dataNode.setObject(node);
 
-			var icon = NSWorkspace.shared().getIconForFileType("java");
+			var icon = createImageFromResource("/images/filetypes/code.png");
 			dataNode.setIcon(icon);
 		}
 
 		return dataNode;
+	}
+
+	private NSImage createImageFromResource(String resourcePath) {
+		var iconData = NSData.dataFromResource(resourcePath);
+		var icon = new NSImage(iconData);
+		return icon;
 	}
 }
