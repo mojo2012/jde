@@ -93,7 +93,8 @@ public class MainWindow {
 		window.addSubview(splitView);
 	}
 
-	private NSTextField createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
+	private NSTextField createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
+			double sidebarHeight) {
 		var textFieldX = sidebarX + sidebarWidth * 2;
 		var textFieldY = sidebarY;
 		var textFieldWidth = bounds.size.width.doubleValue() - sidebarWidth * 2;
@@ -268,11 +269,7 @@ public class MainWindow {
 
 		if (node.getNodes().size() > 0) {
 			var title = node.getName();
-			
-			if (node.isGroupHeader()) {
-				title = title.toUpperCase();
-			}
-			
+
 			var dataGroupNode = new DataGroupNode(title);
 			dataNode = dataGroupNode;
 
@@ -290,8 +287,14 @@ public class MainWindow {
 			dataNode = new DataLeafNode(node.getName());
 			dataNode.setObject(node);
 
-			var icon = createImageFromResource("/images/filetypes/code.png");
-			dataNode.setIcon(icon);
+			if (!node.isGroupHeader()) {
+				var icon = createImageFromResource("/images/filetypes/code.png");
+				dataNode.setIcon(icon);
+			}
+		}
+
+		if (node.isGroupHeader()) {
+			dataNode.setTitle(dataNode.getTitle().toUpperCase());
 		}
 
 		dataNode.setHeader(node.isGroupHeader());
