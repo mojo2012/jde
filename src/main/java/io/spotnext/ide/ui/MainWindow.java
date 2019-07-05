@@ -16,6 +16,7 @@ import io.spotnext.kakao.structs.DataGroupNode;
 import io.spotnext.kakao.structs.DataLeafNode;
 import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
+import io.spotnext.kakao.structs.NSBorderType;
 import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSFocusRingType;
 import io.spotnext.kakao.structs.NSImage;
@@ -35,7 +36,7 @@ import io.spotnext.kakao.ui.NSSearchField;
 import io.spotnext.kakao.ui.NSSplitView;
 import io.spotnext.kakao.ui.NSTableCellView;
 import io.spotnext.kakao.ui.NSTableColumn;
-import io.spotnext.kakao.ui.NSTextField;
+import io.spotnext.kakao.ui.NSTextView;
 import io.spotnext.kakao.ui.NSToolbar;
 import io.spotnext.kakao.ui.NSToolbarItem;
 import io.spotnext.kakao.ui.NSView;
@@ -46,7 +47,7 @@ public class MainWindow {
 	private final NSWindow window;
 	private NSOutlineView explorerSidebar;
 	private NSView detailsSidebar;
-	private NSTextField editorView;
+	private NSTextView editorView;
 
 	public MainWindow() {
 		var windowSize = new NSSize(1200, 800);
@@ -68,8 +69,7 @@ public class MainWindow {
 		var splitView = new NSSplitView(bounds);
 		splitView.setDividerStyle(NSSplitViewDividerStyle.Thin);
 		splitView.setOrientation(Orientation.Vertical);
-
-		splitView.getDividerStyle();
+		splitView.setWantsLayer(true);
 
 		var sidebarX = 0;
 		var sidebarY = 0;
@@ -77,12 +77,11 @@ public class MainWindow {
 		var sidebarHeight = bounds.size.height.doubleValue();
 
 		var explorerSidebarScrollView = createExplorerSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
+		var editorScrollView = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 		var detailsSidebarScrollView = createDetailsSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 
-		editorView = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight);
-
 		splitView.addSubview(explorerSidebarScrollView);
-		splitView.addSubview(editorView);
+		splitView.addSubview(editorScrollView);
 		splitView.addSubview(detailsSidebarScrollView);
 
 		// why can't I pass 200?
@@ -91,22 +90,36 @@ public class MainWindow {
 		splitView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
 //		splitView.setHoldingPriorityForSubview(490, 0);
 
-		window.addSubview(splitView);
+		window.setContentView(splitView);
 	}
 
-	private NSTextField createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
+	private NSScrollView createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
 			double sidebarHeight) {
-		var textFieldX = sidebarX + sidebarWidth * 2;
+
+		var textFieldX = sidebarWidth;
 		var textFieldY = sidebarY;
-		var textFieldWidth = bounds.size.width.doubleValue() - sidebarWidth * 2;
+		var textFieldWidth = bounds.size.width.doubleValue() - (sidebarWidth * 2);
 		var textFieldHeight = sidebarHeight;
 
-		var textField = new NSTextField(new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight));
-		textField.setFocusRingType(NSFocusRingType.None);
-		textField.setBordered(false);
-		textField.setFont(new NSFont("Monaco", 12.));
+		var frame = new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight);
 
-		return textField;
+		var textField = new NSTextView(frame);
+		textField.setFocusRingType(NSFocusRingType.None);
+		textField.setFont(new NSFont("Monaco", 12.));
+		textField.setVerticallyResizable(true);
+		textField.setHorizontallyResizable(true);
+
+		var clipView = new NSClipView();
+		clipView.setAutoresizesSubviews(true);
+		clipView.setDocumentView(textField);
+
+		var scrollView = new NSScrollView(frame);
+		scrollView.setContentView(clipView);
+		scrollView.setBorderType(NSBorderType.NoBorder);
+
+		editorView = textField;
+
+		return scrollView;
 	}
 
 	private NSScrollView createExplorerSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
@@ -121,6 +134,10 @@ public class MainWindow {
 		explorerSidebar.setOutlineTableColumn(col1);
 		explorerSidebar.setTableHeaderView(null);
 		explorerSidebar.setFloatsGroupRows(false);
+		
+		explorerSidebar.onDoubleClick((v, row) -> {
+			v.expandRow(row, false);
+		});
 
 		var delegate = new NSOutlineViewDelegate(explorerSidebar) {
 			@Override
@@ -180,10 +197,11 @@ public class MainWindow {
 		clipView.setAutoresizesSubviews(true);
 		clipView.setDocumentView(detailsSidebar);
 
-		var sidebarScrollView = new NSScrollView(sidebarRect);
-		sidebarScrollView.setContentView(clipView);
+		var scrollView = new NSScrollView(sidebarRect);
+		scrollView.setContentView(clipView);
+		scrollView.setBorderType(NSBorderType.NoBorder);
 
-		return sidebarScrollView;
+		return scrollView;
 	}
 
 	public NSToolbar createToolbar() {
@@ -264,13 +282,17 @@ public class MainWindow {
 		explorerSidebar.setDataSource(new NSOutlineViewDataSource(root) {
 		});
 
+		for (var n : root.getNodes()) {
+			var row = explorerSidebar.getRowForItem(n);
+			explorerSidebar.expandRow(row, false);
+		}
 	}
 
 	private DataNode createNode(ExplorerNode node) {
 		final DataNode dataNode;
 
 		var title = node.isGroupHeader() ? node.getName().toUpperCase() : node.getName();
-		
+
 		if (node.hasChildNodes()) {
 			var dataGroupNode = new DataGroupNode(title);
 			dataGroupNode.setExpanded(node.isGroupHeader());
@@ -278,7 +300,7 @@ public class MainWindow {
 			for (var subNode : node.getNodes()) {
 				dataGroupNode.addNodes(createNode(subNode));
 			}
-			
+
 			dataNode = dataGroupNode;
 		} else {
 			dataNode = new DataLeafNode(title);
@@ -289,16 +311,16 @@ public class MainWindow {
 
 		if (!node.isGroupHeader()) {
 			final NSImage icon;
-			
+
 			if (node.isFile()) {
 				icon = createImageForExtension(((ExplorerFileNode) node).getFileExtension());
 			} else {
 				icon = createImageForExtension(node.isFile() ? null : "folder");
 			}
-			
+
 			dataNode.setIcon(icon);
 		}
-		
+
 		return dataNode;
 	}
 
