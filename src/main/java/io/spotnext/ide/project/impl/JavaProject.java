@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -72,6 +73,11 @@ public class JavaProject implements Project {
 	@Override
 	public void setVersion(String version) {
 		mavenProject.setVersion(version);
+	}
+
+	@Override
+	public List<Dependency> getDependencies() {
+		return model.getDependencies();
 	}
 
 	public static class FakeMavenProject extends MavenProject {

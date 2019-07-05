@@ -14,13 +14,15 @@ import io.spotnext.ide.project.Project;
 import io.spotnext.ide.project.impl.JavaProject;
 import io.spotnext.ide.ui.MainWindow;
 import io.spotnext.kakao.NSApplication;
+import io.spotnext.kakao.structs.NSData;
+import io.spotnext.kakao.structs.NSImage;
 import io.spotnext.kakao.util.ThreadUtil;
 
 public class Application {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 	private static final List<Pattern> FILE_PATTERNS_TO_EXCLUDE = new ArrayList<>();
-	
+
 	static {
 		FILE_PATTERNS_TO_EXCLUDE.add(Pattern.compile("\\.DS_Store"));
 	}
@@ -39,7 +41,7 @@ public class Application {
 	public void run() {
 		ThreadUtil.performOnMainThread(() -> {
 			final var app = NSApplication.sharedApplication();
-			app.setApplicationIconImage("/Applications/Development/Eclipse.app/Contents/Resources/Eclipse.icns");
+			app.setApplicationIconImage(new NSImage(NSData.dataFromResource("/images/icon.png")));
 			app.setApplicationName("JDE");
 			app.setApplicationShouldTerminateAfterLastWindowClosed(true);
 
@@ -67,9 +69,12 @@ public class Application {
 			var dependenciesRoot = new ExplorerNode("Dependencies", true);
 			nodes.add(dependenciesRoot);
 
-//			for (var s : project.getSourceRoots()) {
-//				dependenciesRoot.addNode(readDirectory(s));
-//			}
+			for (var dep : project.getDependencies()) {
+				var fileName = dep.getArtifactId() + "-" + dep.getVersion() + "." + dep.getType();
+				var path = Paths.get("~", ".m2", "repository", dep.getGroupId().replaceAll("\\.", "/"), dep.getArtifactId(), dep.getVersion(),
+						fileName);
+				dependenciesRoot.addNode(new ExplorerZipFileNode(path.toFile()));
+			}
 		}
 
 		private ExplorerNode createFileRootNodes(String name, List<String> baseDirectories) {
@@ -84,7 +89,7 @@ public class Application {
 
 		private ExplorerNode createFileNode(String filePath) {
 			final var file = new File(filePath);
-			final var node = new ExplorerFileNode(file.getName(), filePath, FilenameUtils.getExtension(file.getName()));
+			final var node = new ExplorerFileNode(file);
 
 			if (file.isDirectory()) {
 				for (var l : file.list()) {
@@ -105,24 +110,25 @@ public class Application {
 
 	public static class ExplorerNode {
 		private final String name;
-		private final String filePath;
 		private final boolean isGroupHeader;
 		private final List<ExplorerNode> nodes = new ArrayList<>();
 
-		public ExplorerNode(String name, String filePath) {
+		public ExplorerNode(String name) {
 			this.name = name;
-			this.filePath = filePath;
 			this.isGroupHeader = false;
 		}
 
 		public ExplorerNode(String name, boolean isGroupHeader) {
 			this.name = name;
-			this.filePath = null;
 			this.isGroupHeader = isGroupHeader;
 		}
 
 		public void addNode(ExplorerNode node) {
 			nodes.add(node);
+		}
+
+		public boolean hasChildNodes() {
+			return nodes.size() > 0;
 		}
 
 		public List<ExplorerNode> getNodes() {
@@ -134,11 +140,7 @@ public class Application {
 		}
 
 		public boolean isFile() {
-			return this.filePath != null;
-		}
-
-		public String getFilePath() {
-			return filePath;
+			return false;
 		}
 
 		public boolean isGroupHeader() {
@@ -150,11 +152,15 @@ public class Application {
 	public static class ExplorerFileNode extends ExplorerNode {
 		private String filePath;
 		private String fileExtension;
+		private final boolean isFile;
 
-		public ExplorerFileNode(String name, String filePath, String extension) {
-			super(name, filePath);
-			this.filePath = filePath;
-			this.fileExtension = extension;
+		public ExplorerFileNode(File file) {
+			super(file.getName());
+			this.filePath = file.getAbsolutePath();
+			this.fileExtension = FilenameUtils.getExtension(file.getName());
+			
+			// isFile = false for .jar files?
+			this.isFile = !file.isDirectory();
 		}
 
 		public String getFilePath() {
@@ -171,6 +177,25 @@ public class Application {
 
 		public void setFileExtension(String fileExtension) {
 			this.fileExtension = fileExtension;
+		}
+
+		@Override
+		public boolean isFile() {
+			return isFile;
+		}
+	}
+
+	public static class ExplorerZipFileNode extends ExplorerFileNode {
+		private final File file;
+
+		public ExplorerZipFileNode(File file) {
+			super(file);
+			this.file = file;
+		}
+
+		@Override
+		public boolean hasChildNodes() {
+			return true;
 		}
 
 	}

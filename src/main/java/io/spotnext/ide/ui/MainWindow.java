@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 
 import ca.weblite.objc.Proxy;
 import ca.weblite.objc.annotations.Msg;
+import io.spotnext.ide.Application.ExplorerFileNode;
 import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
 import io.spotnext.kakao.foundation.NSPoint;
@@ -139,8 +140,9 @@ public class MainWindow {
 		};
 
 		delegate.onSelectionChanged(item -> {
-			if (item instanceof DataLeafNode) {
-				var object = (ExplorerNode) item.getObject();
+			if (item instanceof DataLeafNode && item.getObject() instanceof ExplorerFileNode) {
+				var object = (ExplorerFileNode) item.getObject();
+
 				if (object.isFile()) {
 					showFileInEditor(object.getFilePath());
 				}
@@ -267,39 +269,53 @@ public class MainWindow {
 	private DataNode createNode(ExplorerNode node) {
 		final DataNode dataNode;
 
-		if (node.getNodes().size() > 0) {
-			var title = node.getName();
-
+		var title = node.isGroupHeader() ? node.getName().toUpperCase() : node.getName();
+		
+		if (node.hasChildNodes()) {
 			var dataGroupNode = new DataGroupNode(title);
-			dataNode = dataGroupNode;
+			dataGroupNode.setExpanded(node.isGroupHeader());
 
 			for (var subNode : node.getNodes()) {
 				dataGroupNode.addNodes(createNode(subNode));
 			}
-
-			if (!node.isGroupHeader()) {
-				var icon = createImageFromResource("/images/filetypes/folder_closed.png");
-				dataNode.setIcon(icon);
-			} else {
-				dataGroupNode.setExpanded(true);
-			}
+			
+			dataNode = dataGroupNode;
 		} else {
-			dataNode = new DataLeafNode(node.getName());
-			dataNode.setObject(node);
-
-			if (!node.isGroupHeader()) {
-				var icon = createImageFromResource("/images/filetypes/code.png");
-				dataNode.setIcon(icon);
-			}
-		}
-
-		if (node.isGroupHeader()) {
-			dataNode.setTitle(dataNode.getTitle().toUpperCase());
+			dataNode = new DataLeafNode(title);
 		}
 
 		dataNode.setHeader(node.isGroupHeader());
+		dataNode.setObject(node);
 
+		if (!node.isGroupHeader()) {
+			final NSImage icon;
+			
+			if (node.isFile()) {
+				icon = createImageForExtension(((ExplorerFileNode) node).getFileExtension());
+			} else {
+				icon = createImageForExtension(node.isFile() ? null : "folder");
+			}
+			
+			dataNode.setIcon(icon);
+		}
+		
 		return dataNode;
+	}
+
+	private NSImage createImageForExtension(String fileExtension) {
+		String imagePath = "/images/filetypes/";
+
+		if ("java".equals(fileExtension)) {
+			imagePath += "java.icns";
+		} else if ("folder".equals(fileExtension)) {
+			imagePath += "folder_closed.png";
+		} else if ("jar".equals(fileExtension)) {
+			imagePath += "dependency.icns";
+		} else {
+			imagePath += "generic_document.png";
+		}
+
+		return createImageFromResource(imagePath);
 	}
 
 	private NSImage createImageFromResource(String resourcePath) {

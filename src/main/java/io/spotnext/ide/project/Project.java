@@ -2,6 +2,8 @@ package io.spotnext.ide.project;
 
 import java.util.List;
 
+import org.apache.maven.model.Dependency;
+
 public interface Project {
 
 	void setName(String title);
@@ -19,4 +21,6 @@ public interface Project {
 	List<String> getResourceRoots();
 	
 	List<String> getTestResourceRoots();
+	
+	List<Dependency> getDependencies();
 }
