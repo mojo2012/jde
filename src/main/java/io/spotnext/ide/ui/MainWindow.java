@@ -136,7 +136,11 @@ public class MainWindow {
 		explorerSidebar.setFloatsGroupRows(false);
 		
 		explorerSidebar.onDoubleClick((v, row) -> {
-			v.expandRow(row, false);
+			if (v.isRowExpanded(row)) {
+				v.collapseRow(row);
+			} else {
+				v.expandRow(row, false);
+			}
 		});
 
 		var delegate = new NSOutlineViewDelegate(explorerSidebar) {
