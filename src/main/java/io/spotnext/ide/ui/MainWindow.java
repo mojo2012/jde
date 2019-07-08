@@ -137,9 +137,9 @@ public class MainWindow {
 		
 		explorerSidebar.onDoubleClick((v, row) -> {
 			if (v.isRowExpanded(row)) {
-				v.collapseRow(row);
+				v.<NSOutlineView>getAnimator().collapseRow(row);
 			} else {
-				v.expandRow(row, false);
+				v.<NSOutlineView>getAnimator().expandRow(row, false);
 			}
 		});
 
