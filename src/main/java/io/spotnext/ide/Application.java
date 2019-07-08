@@ -158,7 +158,7 @@ public class Application {
 			super(file.getName());
 			this.filePath = file.getAbsolutePath();
 			this.fileExtension = FilenameUtils.getExtension(file.getName());
-			
+
 			// isFile = false for .jar files?
 			this.isFile = !file.isDirectory();
 		}
@@ -196,6 +196,10 @@ public class Application {
 		@Override
 		public boolean hasChildNodes() {
 			return true;
+		}
+
+		public File getFile() {
+			return file;
 		}
 
 	}

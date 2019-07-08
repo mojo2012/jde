@@ -134,12 +134,12 @@ public class MainWindow {
 		explorerSidebar.setOutlineTableColumn(col1);
 		explorerSidebar.setTableHeaderView(null);
 		explorerSidebar.setFloatsGroupRows(false);
-		
+
 		explorerSidebar.onDoubleClick((v, row) -> {
 			if (v.isRowExpanded(row)) {
-				v.<NSOutlineView>getAnimator().collapseRow(row);
+				v.collapseRow(row);
 			} else {
-				v.<NSOutlineView>getAnimator().expandRow(row, false);
+				v.expandRow(row, false);
 			}
 		});
 
