@@ -16,6 +16,7 @@ import io.spotnext.ide.ui.MainWindow;
 import io.spotnext.kakao.NSApplication;
 import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSImage;
+import io.spotnext.kakao.support.NSBundle;
 import io.spotnext.kakao.util.ThreadUtil;
 
 public class Application {
@@ -30,7 +31,7 @@ public class Application {
 	private final Project project;
 
 	public static void main(String... args) {
-		var app = new Application("/Users/matthias/Projekte/spOt/jfly/pom.xml");
+		var app = new Application("/var/tmp/my-app/pom.xml");
 		app.run();
 	}
 
@@ -44,6 +45,8 @@ public class Application {
 			app.setApplicationIconImage(new NSImage(NSData.dataFromResource("/images/icon.png")));
 			app.setApplicationName("JDE");
 			app.setApplicationShouldTerminateAfterLastWindowClosed(true);
+
+			var aceViewBundle = new NSBundle("/frameworks/ACEView.framework", this.getClass());
 
 			final var window = new MainWindow();
 
@@ -71,8 +74,8 @@ public class Application {
 
 			for (var dep : project.getDependencies()) {
 				var fileName = dep.getArtifactId() + "-" + dep.getVersion() + "." + dep.getType();
-				var path = Paths.get("~", ".m2", "repository", dep.getGroupId().replaceAll("\\.", "/"), dep.getArtifactId(), dep.getVersion(),
-						fileName);
+				var path = Paths.get("~", ".m2", "repository", dep.getGroupId().replaceAll("\\.", "/"),
+						dep.getArtifactId(), dep.getVersion(), fileName);
 				dependenciesRoot.addNode(new ExplorerZipFileNode(path.toFile()));
 			}
 		}

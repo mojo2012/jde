@@ -9,6 +9,7 @@ import ca.weblite.objc.annotations.Msg;
 import io.spotnext.ide.Application.ExplorerFileNode;
 import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
+import io.spotnext.ide.ui.widgets.ACEView;
 import io.spotnext.kakao.foundation.NSPoint;
 import io.spotnext.kakao.foundation.NSRect;
 import io.spotnext.kakao.foundation.NSSize;
@@ -18,14 +19,12 @@ import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSBorderType;
 import io.spotnext.kakao.structs.NSData;
-import io.spotnext.kakao.structs.NSFocusRingType;
 import io.spotnext.kakao.structs.NSImage;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
 import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
 import io.spotnext.kakao.structs.Orientation;
 import io.spotnext.kakao.structs.SelectionHighlightStyle;
-import io.spotnext.kakao.support.NSFont;
 import io.spotnext.kakao.support.NSOutlineViewDataSource;
 import io.spotnext.kakao.support.NSOutlineViewDelegate;
 import io.spotnext.kakao.ui.NSButton;
@@ -36,7 +35,6 @@ import io.spotnext.kakao.ui.NSSearchField;
 import io.spotnext.kakao.ui.NSSplitView;
 import io.spotnext.kakao.ui.NSTableCellView;
 import io.spotnext.kakao.ui.NSTableColumn;
-import io.spotnext.kakao.ui.NSTextView;
 import io.spotnext.kakao.ui.NSToolbar;
 import io.spotnext.kakao.ui.NSToolbarItem;
 import io.spotnext.kakao.ui.NSView;
@@ -47,7 +45,7 @@ public class MainWindow {
 	private final NSWindow window;
 	private NSOutlineView explorerSidebar;
 	private NSView detailsSidebar;
-	private NSTextView editorView;
+	private ACEView editorView;
 
 	public MainWindow() {
 		var windowSize = new NSSize(1200, 800);
@@ -103,11 +101,16 @@ public class MainWindow {
 
 		var frame = new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight);
 
-		var textField = new NSTextView(frame);
-		textField.setFocusRingType(NSFocusRingType.None);
-		textField.setFont(new NSFont("Monaco", 12.));
-		textField.setVerticallyResizable(true);
-		textField.setHorizontallyResizable(true);
+		var textField = new ACEView(frame);
+		textField.setPrintMarginColumn(40);
+//	    textField setMode:ACEModeHTML];
+//	    textField setTheme:ACEThemeXcode];
+//	    textField setShowInvisibles:YES];
+		
+//		textField.setFocusRingType(NSFocusRingType.None);
+//		textField.setFont(new NSFont("Monaco", 12.));
+//		textField.setVerticallyResizable(true);
+//		textField.setHorizontallyResizable(true);
 
 		var clipView = new NSClipView();
 		clipView.setAutoresizesSubviews(true);
@@ -119,7 +122,7 @@ public class MainWindow {
 
 		editorView = textField;
 
-		return scrollView;
+		return textField;
 	}
 
 	private NSScrollView createExplorerSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
