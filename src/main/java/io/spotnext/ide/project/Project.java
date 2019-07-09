@@ -1,11 +1,14 @@
 package io.spotnext.ide.project;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.maven.model.Dependency;
 
 public interface Project {
 
+	Path getRootPath();
+	
 	void setName(String title);
 
 	String getName();

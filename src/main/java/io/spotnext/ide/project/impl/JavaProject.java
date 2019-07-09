@@ -1,6 +1,8 @@
 package io.spotnext.ide.project.impl;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,11 +21,13 @@ public class JavaProject implements Project {
 
 	private final MavenProject mavenProject;
 	private Model model;
+	private final Path rootPath;
 
 	public JavaProject(String projectFile) {
 		var factory = new DefaultModelBuilderFactory();
 
 		var pomFile = new File(projectFile);
+		rootPath = Paths.get(pomFile.getParent());
 		var request = new DefaultModelBuildingRequest();
 		request.setPomFile(pomFile);
 
@@ -126,5 +130,10 @@ public class JavaProject implements Project {
 	@Override
 	public List<String> getTestResourceRoots() {
 		return model.getBuild().getTestResources().stream().map(r -> r.getDirectory()).collect(Collectors.toList());
+	}
+	
+	@Override
+	public Path getRootPath() {
+		return rootPath;
 	}
 }
