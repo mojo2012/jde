@@ -9,6 +9,8 @@ import ca.weblite.objc.annotations.Msg;
 import io.spotnext.ide.Application.ExplorerFileNode;
 import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
+import io.spotnext.ide.structs.ACEMode;
+import io.spotnext.ide.structs.ACETheme;
 import io.spotnext.ide.ui.widgets.ACEView;
 import io.spotnext.kakao.foundation.NSPoint;
 import io.spotnext.kakao.foundation.NSRect;
@@ -25,6 +27,7 @@ import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
 import io.spotnext.kakao.structs.Orientation;
 import io.spotnext.kakao.structs.SelectionHighlightStyle;
+import io.spotnext.kakao.support.NSFont;
 import io.spotnext.kakao.support.NSOutlineViewDataSource;
 import io.spotnext.kakao.support.NSOutlineViewDelegate;
 import io.spotnext.kakao.ui.NSButton;
@@ -102,23 +105,16 @@ public class MainWindow {
 		var frame = new NSRect(textFieldX, textFieldY, textFieldWidth, textFieldHeight);
 
 		var textField = new ACEView(frame);
-		textField.setPrintMarginColumn(40);
-//	    textField setMode:ACEModeHTML];
-//	    textField setTheme:ACEThemeXcode];
-//	    textField setShowInvisibles:YES];
-		
-//		textField.setFocusRingType(NSFocusRingType.None);
-//		textField.setFont(new NSFont("Monaco", 12.));
-//		textField.setVerticallyResizable(true);
-//		textField.setHorizontallyResizable(true);
-
-		var clipView = new NSClipView();
-		clipView.setAutoresizesSubviews(true);
-		clipView.setDocumentView(textField);
-
-		var scrollView = new NSScrollView(frame);
-		scrollView.setContentView(clipView);
-		scrollView.setBorderType(NSBorderType.NoBorder);
+		textField.setPrintMarginColumn(160);
+		textField.setMode(ACEMode.ACEModeJava);
+		textField.setTheme(ACETheme.ACEThemeEclipse);
+		textField.setShowInvisibleCharacters(false);
+		textField.setFont("Monaco", 12);
+		textField.setBorderType(NSBorderType.NoBorder);
+		textField.setWrappingBehavioursEnabled(true);
+		textField.setVerticalScroller(true);
+		textField.setHorizontalScroller(true);
+		textField.setAutohideScroller(true);
 
 		editorView = textField;
 

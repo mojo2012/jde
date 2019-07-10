@@ -47,6 +47,8 @@ public class Application {
 			app.setApplicationShouldTerminateAfterLastWindowClosed(true);
 
 			var aceViewBundle = new NSBundle("/frameworks/ACEView.framework", this.getClass());
+//			var kpcTabsBundle = new NSBundle("/frameworks/KPCTabsControl.framework", this.getClass());
+			var mmTabsBundle = new NSBundle("/frameworks/MMTabBarView.framework", this.getClass());
 
 			final var window = new MainWindow();
 
