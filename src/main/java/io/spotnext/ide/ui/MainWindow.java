@@ -3,6 +3,8 @@ package io.spotnext.ide.ui;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import ca.weblite.objc.Proxy;
 import ca.weblite.objc.annotations.Msg;
@@ -11,7 +13,9 @@ import io.spotnext.ide.Application.ExplorerNode;
 import io.spotnext.ide.Application.ProjectExplorerData;
 import io.spotnext.ide.structs.ACEMode;
 import io.spotnext.ide.structs.ACETheme;
+import io.spotnext.ide.ui.structs.MMTabStyle;
 import io.spotnext.ide.ui.widgets.ACEView;
+import io.spotnext.ide.ui.widgets.MMTabBarView;
 import io.spotnext.kakao.foundation.NSPoint;
 import io.spotnext.kakao.foundation.NSRect;
 import io.spotnext.kakao.foundation.NSSize;
@@ -22,12 +26,14 @@ import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSBorderType;
 import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSImage;
+import io.spotnext.kakao.structs.NSNumber;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
+import io.spotnext.kakao.structs.NSStackViewGravity;
+import io.spotnext.kakao.structs.NSTabViewItem;
 import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
+import io.spotnext.kakao.structs.NSUserInterfaceLayoutOrientation;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
-import io.spotnext.kakao.structs.Orientation;
 import io.spotnext.kakao.structs.SelectionHighlightStyle;
-import io.spotnext.kakao.support.NSFont;
 import io.spotnext.kakao.support.NSOutlineViewDataSource;
 import io.spotnext.kakao.support.NSOutlineViewDelegate;
 import io.spotnext.kakao.ui.NSButton;
@@ -36,6 +42,8 @@ import io.spotnext.kakao.ui.NSOutlineView;
 import io.spotnext.kakao.ui.NSScrollView;
 import io.spotnext.kakao.ui.NSSearchField;
 import io.spotnext.kakao.ui.NSSplitView;
+import io.spotnext.kakao.ui.NSStackView;
+import io.spotnext.kakao.ui.NSTabView;
 import io.spotnext.kakao.ui.NSTableCellView;
 import io.spotnext.kakao.ui.NSTableColumn;
 import io.spotnext.kakao.ui.NSToolbar;
@@ -48,7 +56,7 @@ public class MainWindow {
 	private final NSWindow window;
 	private NSOutlineView explorerSidebar;
 	private NSView detailsSidebar;
-	private ACEView editorView;
+	private Map<Integer, ACEView> editorViewsPerTab = new HashMap<>();
 
 	public MainWindow() {
 		var windowSize = new NSSize(1200, 800);
@@ -69,7 +77,7 @@ public class MainWindow {
 
 		var splitView = new NSSplitView(bounds);
 		splitView.setDividerStyle(NSSplitViewDividerStyle.Thin);
-		splitView.setOrientation(Orientation.Vertical);
+		splitView.setOrientation(NSUserInterfaceLayoutOrientation.Vertical);
 		splitView.setWantsLayer(true);
 
 		var sidebarX = 0;
@@ -78,11 +86,11 @@ public class MainWindow {
 		var sidebarHeight = bounds.size.height.doubleValue();
 
 		var explorerSidebarScrollView = createExplorerSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
-		var editorScrollView = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight);
+		var editorAreaScrollView = createEditorArea(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 		var detailsSidebarScrollView = createDetailsSidebar(sidebarX, sidebarY, sidebarWidth, sidebarHeight);
 
 		splitView.addSubview(explorerSidebarScrollView);
-		splitView.addSubview(editorScrollView);
+		splitView.addSubview(editorAreaScrollView);
 		splitView.addSubview(detailsSidebarScrollView);
 
 		// why can't I pass 200?
@@ -94,8 +102,61 @@ public class MainWindow {
 		window.setContentView(splitView);
 	}
 
-	private NSScrollView createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
+	private NSStackView createEditorArea(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
 			double sidebarHeight) {
+
+		var editorAreaX = sidebarWidth;
+		var editorAreaY = sidebarY;
+		var editorAreadWidth = bounds.size.width.doubleValue() - (sidebarWidth * 2);
+		var editorAreaHeight = sidebarHeight;
+
+		var frame = new NSRect(editorAreaX, editorAreaY, editorAreadWidth, editorAreaHeight);
+
+		var stackView = new NSStackView(frame);
+		stackView.setOrientation(NSUserInterfaceLayoutOrientation.Vertical);
+		stackView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
+
+//		var clipView = new NSClipView();
+//		clipView.setAutoresizesSubviews(true);
+//		clipView.setDocumentView(stackView);
+//		
+//		var sidebarScrollView = new NSScrollView(frame);
+//		sidebarScrollView.setContentView(clipView);
+
+		var tabViewFrame = new NSRect(0, 0, frame.size.width.doubleValue(), frame.size.height.doubleValue() - 200.);
+
+		var tabView = new NSTabView(tabViewFrame);
+//		tabView.setTabPosition(NSTabPosition.None);
+//		tabView.setTabViewType(NSTabViewType.NoTabsNoBorder);
+//				new NSRect(frame.origin.x.doubleValue(),
+//				frame.origin.y.doubleValue() + tabBar.getFrame().size.height.doubleValue(), 
+//				frame.size.width.doubleValue(),
+//				frame.size.width.doubleValue()));
+
+		var tabBar = new MMTabBarView(tabView, new NSRect(frame.size.width.doubleValue(), 200.));
+		tabBar.setPartnerView(tabView);
+		tabBar.setTabView(tabView);
+		tabBar.setTabStyle(MMTabStyle.Mojave);
+		tabBar.setShowAddTabButton(true);
+
+		var item = new MMTabBarItem();
+		item.setTitle("Test");
+		var tabItem = new NSTabViewItem(item);
+		tabView.addTabViewItem(tabItem);
+//		tabView.addTabViewItem(new NSTabViewItem("test2", "Test 2"));
+
+//		item.setProcessing(true);
+		item.setProcessing(true);;
+		item.setObjectCount(10);
+
+		stackView.addViewInGravity(tabBar, NSStackViewGravity.Top);
+		stackView.addViewInGravity(tabView, NSStackViewGravity.Top);
+
+		return stackView;
+	}
+
+	private NSScrollView createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
+			double sidebarHeight, int tabId) {
 
 		var textFieldX = sidebarWidth;
 		var textFieldY = sidebarY;
@@ -116,7 +177,7 @@ public class MainWindow {
 		textField.setHorizontalScroller(true);
 		textField.setAutohideScroller(true);
 
-		editorView = textField;
+		editorViewsPerTab.put(tabId, textField);
 
 		return textField;
 	}
@@ -164,7 +225,7 @@ public class MainWindow {
 				var object = (ExplorerFileNode) item.getObject();
 
 				if (object.isFile()) {
-					showFileInEditor(object.getFilePath());
+					showFileInEditor(object.getFilePath(), true);
 				}
 			}
 		});
@@ -182,7 +243,7 @@ public class MainWindow {
 		return sidebarScrollView;
 	}
 
-	private void showFileInEditor(String filePath) {
+	private void showFileInEditor(String filePath, boolean newEditor) {
 		String fileValue;
 		try {
 			fileValue = Files.readString(Paths.get(filePath));
@@ -190,7 +251,11 @@ public class MainWindow {
 			fileValue = "";
 		}
 
-		editorView.setText(fileValue);
+		if (newEditor) {
+//			var editor = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight, tabId)
+		}
+
+//		editorView.setText(fileValue);
 	}
 
 	private NSScrollView createDetailsSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
