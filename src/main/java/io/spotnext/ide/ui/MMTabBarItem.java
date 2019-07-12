@@ -4,8 +4,9 @@ import ca.weblite.objc.annotations.Msg;
 import io.spotnext.kakao.NSObject;
 import io.spotnext.kakao.structs.NSImage;
 import io.spotnext.kakao.structs.NSNumber;
+import io.spotnext.kakao.support.NSCopying;
 
-public class MMTabBarItem extends NSObject {
+public class MMTabBarItem extends NSObject implements NSCopying {
 
 	private String title;
 	private NSImage icon;
@@ -111,4 +112,9 @@ public class MMTabBarItem extends NSObject {
 		this.hasCloseButton = hasCloseButton;
 	}
 
+	@Override
+	@Msg(selector = "copyWithZone", signature = "@@:")
+	public NSObject copyWithZone() {
+		return this;
+	}
 }

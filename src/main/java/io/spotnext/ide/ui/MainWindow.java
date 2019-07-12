@@ -148,6 +148,8 @@ public class MainWindow {
 //		item.setProcessing(true);
 		item.setProcessing(true);;
 		item.setObjectCount(10);
+		
+//		tabBar.getTabButtonForIdentifier(item);
 
 		stackView.addViewInGravity(tabBar, NSStackViewGravity.Top);
 		stackView.addViewInGravity(tabView, NSStackViewGravity.Top);

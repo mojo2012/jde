@@ -8,6 +8,7 @@ import io.spotnext.ide.ui.structs.MMTabStyle;
 import io.spotnext.kakao.NSObject;
 import io.spotnext.kakao.foundation.NSRect;
 import io.spotnext.kakao.structs.NSTabViewItem;
+import io.spotnext.kakao.ui.NSButton;
 import io.spotnext.kakao.ui.NSTabView;
 import io.spotnext.kakao.ui.NSView;
 
@@ -117,6 +118,12 @@ public class MMTabBarView extends NSView {
 	public void setTearOffStyle(MMTabBarTearOffStyle value) {
 		getNativeHandle().send("setTearOffStyle:", value.id);
 	}
+	
+	public NSButton getTabButtonForIdentifier(NSObject identifier) {
+		var proxy = getNativeHandle().sendProxy("tabButtonForIdentifier:", identifier);
+		
+		return new NSButton(proxy);
+	}
 
 	@Msg(selector = "tabView:didSelectTabViewItem:", signature = "v@:@@")
 	public void tabViewDidSelectTabViewItem(Proxy tabView, Proxy tabViewItem) {
@@ -124,10 +131,15 @@ public class MMTabBarView extends NSView {
 		var nsTabViewItem = (NSTabViewItem) NSObject.getInstance(tabViewItem.getPeer());
 
 		var mmtabBar = (MMTabBarView) nsTabBar.getDelegate();
+		
+//		mmtabBar.getTabButtonForIdentifier(nsTabViewItem.getIdentifier());
+		
+		var subviews = mmtabBar.getSubViews();
 
 		var identifier = nsTabViewItem.getIdentifier();
 		var title = ((MMTabBarItem) identifier).getTitle();
 
 		nsTabViewItem.setLabel(title);
 	}
+	
 }
