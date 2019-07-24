@@ -26,10 +26,11 @@ import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSBorderType;
 import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSImage;
-import io.spotnext.kakao.structs.NSNumber;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
 import io.spotnext.kakao.structs.NSStackViewGravity;
+import io.spotnext.kakao.structs.NSTabPosition;
 import io.spotnext.kakao.structs.NSTabViewItem;
+import io.spotnext.kakao.structs.NSTabViewType;
 import io.spotnext.kakao.structs.NSTableViewRowSizeStyle;
 import io.spotnext.kakao.structs.NSUserInterfaceLayoutOrientation;
 import io.spotnext.kakao.structs.NSWindowTitleVisibility;
@@ -57,6 +58,8 @@ public class MainWindow {
 	private NSOutlineView explorerSidebar;
 	private NSView detailsSidebar;
 	private Map<Integer, ACEView> editorViewsPerTab = new HashMap<>();
+	private MMTabBarView tabBar;
+	private NSTabView tabView;
 
 	public MainWindow() {
 		var windowSize = new NSSize(1200, 800);
@@ -78,7 +81,6 @@ public class MainWindow {
 		var splitView = new NSSplitView(bounds);
 		splitView.setDividerStyle(NSSplitViewDividerStyle.Thin);
 		splitView.setOrientation(NSUserInterfaceLayoutOrientation.Vertical);
-		splitView.setWantsLayer(true);
 
 		var sidebarX = 0;
 		var sidebarY = 0;
@@ -116,45 +118,60 @@ public class MainWindow {
 		stackView.setOrientation(NSUserInterfaceLayoutOrientation.Vertical);
 		stackView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
 
-//		var clipView = new NSClipView();
-//		clipView.setAutoresizesSubviews(true);
-//		clipView.setDocumentView(stackView);
-//		
-//		var sidebarScrollView = new NSScrollView(frame);
-//		sidebarScrollView.setContentView(clipView);
-
 		var tabViewFrame = new NSRect(0, 0, frame.size.width.doubleValue(), frame.size.height.doubleValue() - 200.);
 
-		var tabView = new NSTabView(tabViewFrame);
-//		tabView.setTabPosition(NSTabPosition.None);
-//		tabView.setTabViewType(NSTabViewType.NoTabsNoBorder);
-//				new NSRect(frame.origin.x.doubleValue(),
-//				frame.origin.y.doubleValue() + tabBar.getFrame().size.height.doubleValue(), 
-//				frame.size.width.doubleValue(),
-//				frame.size.width.doubleValue()));
+		tabView = new NSTabView(tabViewFrame);
+		tabView.setTabPosition(NSTabPosition.None);
+		tabView.setTabViewType(NSTabViewType.NoTabsNoBorder);
 
-		var tabBar = new MMTabBarView(tabView, new NSRect(frame.size.width.doubleValue(), 200.));
+		tabBar = new MMTabBarView(tabView, new NSRect(frame.size.width.doubleValue(), 200.));
 		tabBar.setPartnerView(tabView);
 		tabBar.setTabView(tabView);
 		tabBar.setTabStyle(MMTabStyle.Mojave);
-		tabBar.setShowAddTabButton(true);
-
-		var item = new MMTabBarItem();
-		item.setTitle("Test");
-		var tabItem = new NSTabViewItem(item);
-		tabView.addTabViewItem(tabItem);
-//		tabView.addTabViewItem(new NSTabViewItem("test2", "Test 2"));
-
-//		item.setProcessing(true);
-		item.setProcessing(true);;
-		item.setObjectCount(10);
-		
-//		tabBar.getTabButtonForIdentifier(item);
 
 		stackView.addViewInGravity(tabBar, NSStackViewGravity.Top);
 		stackView.addViewInGravity(tabView, NSStackViewGravity.Top);
 
 		return stackView;
+	}
+
+	private ACEView addTab(String title) {
+		var item = new MMTabBarItem();
+		item.setTitle(title);
+		var tabItem = new NSTabViewItem(item);
+		tabView.addTabViewItem(tabItem);
+//		tabView.addTabViewItem(new NSTabViewItem("test2", "Test 2"));
+
+//		item.setProcessing(true);
+//		item.setProcessing(true);
+//		item.setObjectCount(10);
+
+		var frame = new NSRect(tabView.frame());
+
+		var textField = new ACEView(frame);
+		textField.setPrintMarginColumn(40);
+		textField.setPrintMarginColumn(160);
+		textField.setMode(ACEMode.ACEModeJava);
+		textField.setTheme(ACETheme.ACEThemeEclipse);
+		textField.setShowInvisibleCharacters(false);
+		textField.setFont("Monaco", 12);
+		textField.setBorderType(NSBorderType.NoBorder);
+		textField.setWrappingBehavioursEnabled(true);
+		textField.setVerticalScroller(true);
+		textField.setHorizontalScroller(true);
+		textField.setAutohideScroller(true);
+
+		var clipView = new NSClipView();
+		clipView.setAutoresizesSubviews(true);
+		clipView.setDocumentView(textField);
+
+		var scrollView = new NSScrollView(frame);
+		scrollView.setContentView(clipView);
+		scrollView.setBorderType(NSBorderType.NoBorder);
+
+		tabItem.setView(textField);
+
+		return textField;
 	}
 
 	private NSScrollView createCodeEditor(NSRect bounds, int sidebarX, int sidebarY, double sidebarWidth,
@@ -255,9 +272,9 @@ public class MainWindow {
 
 		if (newEditor) {
 //			var editor = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight, tabId)
+			var editorView = addTab("test");
+			editorView.setText(fileValue);
 		}
-
-//		editorView.setText(fileValue);
 	}
 
 	private NSScrollView createDetailsSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
