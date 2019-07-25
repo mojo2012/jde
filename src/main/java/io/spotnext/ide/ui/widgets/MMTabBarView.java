@@ -118,10 +118,10 @@ public class MMTabBarView extends NSView {
 	public void setTearOffStyle(MMTabBarTearOffStyle value) {
 		getNativeHandle().send("setTearOffStyle:", value.id);
 	}
-	
+
 	public NSButton getTabButtonForIdentifier(NSObject identifier) {
 		var proxy = getNativeHandle().sendProxy("tabButtonForIdentifier:", identifier);
-		
+
 		return new NSButton(proxy);
 	}
 
@@ -131,15 +131,27 @@ public class MMTabBarView extends NSView {
 		var nsTabViewItem = (NSTabViewItem) NSObject.getInstance(tabViewItem.getPeer());
 
 		var mmtabBar = (MMTabBarView) nsTabBar.getDelegate();
-		
+
 //		mmtabBar.getTabButtonForIdentifier(nsTabViewItem.getIdentifier());
-		
+
 		var subviews = mmtabBar.getSubViews();
 
 		var identifier = nsTabViewItem.getIdentifier();
-		var title = ((MMTabBarItem) identifier).getTitle();
 
-		nsTabViewItem.setLabel(title);
+		if (identifier instanceof MMTabBarItem) {
+			var title = ((MMTabBarItem) identifier).getTitle();
+			nsTabViewItem.setLabel(title);
+		}
+	}
+
+	public void selectTabViewItem(NSTabViewItem item) {
+		getNativeHandle().send("selectTabViewItem:", item.getNativeHandle());
+	}
+	
+	@Override
+	public void refresh() {
+		super.refresh();
+		getNativeHandle().send("setNeedsUpdate:", true);
 	}
 	
 }

@@ -1,5 +1,6 @@
 package io.spotnext.ide.ui;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,6 +25,7 @@ import io.spotnext.kakao.structs.DataLeafNode;
 import io.spotnext.kakao.structs.DataNode;
 import io.spotnext.kakao.structs.NSAutoresizingMaskOptions;
 import io.spotnext.kakao.structs.NSBorderType;
+import io.spotnext.kakao.structs.NSColor;
 import io.spotnext.kakao.structs.NSData;
 import io.spotnext.kakao.structs.NSImage;
 import io.spotnext.kakao.structs.NSSplitViewDividerStyle;
@@ -118,16 +120,18 @@ public class MainWindow {
 		stackView.setOrientation(NSUserInterfaceLayoutOrientation.Vertical);
 		stackView.setAutoresizingMask(NSAutoresizingMaskOptions.HeightSizable, NSAutoresizingMaskOptions.WidthSizable);
 
-		var tabViewFrame = new NSRect(0, 0, frame.size.width.doubleValue(), frame.size.height.doubleValue() - 200.);
+		var tabViewFrame = new NSRect(0, 0, frame.size.width.doubleValue(), frame.size.height.doubleValue() - 100.);
 
 		tabView = new NSTabView(tabViewFrame);
 		tabView.setTabPosition(NSTabPosition.None);
 		tabView.setTabViewType(NSTabViewType.NoTabsNoBorder);
+		tabView.setBackgroundColor(NSColor.DARK_GREY);
 
-		tabBar = new MMTabBarView(tabView, new NSRect(frame.size.width.doubleValue(), 200.));
+		tabBar = new MMTabBarView(tabView, new NSRect(frame.size.width.doubleValue(), 100.));
 		tabBar.setPartnerView(tabView);
 		tabBar.setTabView(tabView);
 		tabBar.setTabStyle(MMTabStyle.Mojave);
+//		tabBar.setOnlyShowCloseOnHover(false);
 
 		stackView.addViewInGravity(tabBar, NSStackViewGravity.Top);
 		stackView.addViewInGravity(tabView, NSStackViewGravity.Top);
@@ -140,7 +144,6 @@ public class MainWindow {
 		item.setTitle(title);
 		var tabItem = new NSTabViewItem(item);
 		tabView.addTabViewItem(tabItem);
-//		tabView.addTabViewItem(new NSTabViewItem("test2", "Test 2"));
 
 //		item.setProcessing(true);
 //		item.setProcessing(true);
@@ -149,7 +152,7 @@ public class MainWindow {
 		var frame = new NSRect(tabView.frame());
 
 		var textField = new ACEView(frame);
-		textField.setPrintMarginColumn(40);
+		textField.setPrintMarginColumn(160);
 		textField.setPrintMarginColumn(160);
 		textField.setMode(ACEMode.ACEModeJava);
 		textField.setTheme(ACETheme.ACEThemeEclipse);
@@ -263,6 +266,7 @@ public class MainWindow {
 	}
 
 	private void showFileInEditor(String filePath, boolean newEditor) {
+		var file = new File(filePath);
 		String fileValue;
 		try {
 			fileValue = Files.readString(Paths.get(filePath));
@@ -272,9 +276,14 @@ public class MainWindow {
 
 		if (newEditor) {
 //			var editor = createCodeEditor(bounds, sidebarX, sidebarY, sidebarWidth, sidebarHeight, tabId)
-			var editorView = addTab("test");
+			var editorView = addTab(file.getName());
 			editorView.setText(fileValue);
 		}
+
+		var item = tabView.getTabViewItemAtIndex(tabView.getNumberOfTabViewItems() - 1);
+
+		tabBar.selectTabViewItem(item);
+		tabBar.refresh();
 	}
 
 	private NSScrollView createDetailsSidebar(int sidebarX, int sidebarY, double sidebarWidth, double sidebarHeight) {
